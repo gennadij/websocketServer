@@ -1,0 +1,62 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 6db5ef7465d4df2662ad6eaeddf4c7d34ffd8ae3f56c78624c2f0cf181dc0930
+
+name:           websocketServer
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/websocketServer#readme>
+homepage:       https://github.com/githubuser/websocketServer#readme
+bug-reports:    https://github.com/githubuser/websocketServer/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/websocketServer
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_websocketServer
+  hs-source-dirs:
+      src
+  build-depends: 
+        base >=4.7 && <5
+  default-language: Haskell2010
+
+executable websocketServer-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_websocketServer
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , websocketServer
+  default-language: Haskell2010
+
+test-suite websocketServer-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_websocketServer
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , websocketServer
+  default-language: Haskell2010
