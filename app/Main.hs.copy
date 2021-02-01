@@ -77,7 +77,6 @@ broadcast message clients = do
 main :: IO ()
 main = do
     state <- newMVar newServerState
-    T.putStrLn "Websocket Server run"
     WS.runServer "127.0.0.1" 9160 $ application state
 
 -- Our main application has the type:
@@ -103,26 +102,25 @@ application state pending = do
 
         msg <- WS.receiveData conn
         clients <- readMVar state
-        T.putStrLn ("Message from Client : " <> msg )
         case msg of
 
 -- Check that the first message has the right format:
-            _   | False -> WS.sendTextData conn (msg :: Text)
-            -- _   | not (prefix `T.isPrefixOf` msg) ->
-              --      WS.sendTextData conn ("Wrong announcement" :: Text)
+
+            _   | not (prefix `T.isPrefixOf` msg) ->
+                    WS.sendTextData conn ("Wrong announcement" :: Text)
 
 -- Check the validity of the username:
 
-              --  | any ($ fst client)
-              --      [T.null, T.any isPunctuation, T.any isSpace] ->
-              --          WS.sendTextData conn ("Name cannot " <>
-              --              "contain punctuation or whitespace, and " <>
-              --              "cannot be empty" :: Text)
+                | any ($ fst client)
+                    [T.null, T.any isPunctuation, T.any isSpace] ->
+                        WS.sendTextData conn ("Name cannot " <>
+                            "contain punctuation or whitespace, and " <>
+                            "cannot be empty" :: Text)
 
 -- Check that the given username is not already taken:
 
-              --  | clientExists client clients ->
-              --      WS.sendTextData conn ("User already exists" :: Text)
+                | clientExists client clients ->
+                    WS.sendTextData conn ("User already exists" :: Text)
 
 -- All is right! We're going to allow the client, but for safety reasons we *first*
 -- setup a `disconnect` function that will be run when the connection is closed.
