@@ -103,11 +103,11 @@ application state pending = do
 
         msg <- WS.receiveData conn
         clients <- readMVar state
-        T.putStrLn ("Message from Client : " <> msg )
+        T.putStrLn ("Message from Client : " <> msg)
         case msg of
 
 -- Check that the first message has the right format:
-            _   | False -> WS.sendTextData conn (msg :: Text)
+            _   | False -> T.putStrLn "False"   -- WS.sendTextData conn (msg :: Text)
             -- _   | not (prefix `T.isPrefixOf` msg) ->
               --      WS.sendTextData conn ("Wrong announcement" :: Text)
 
@@ -132,15 +132,15 @@ application state pending = do
 -- We send a "Welcome!", according to our own little protocol. We add the client to
 -- the list and broadcast the fact that he has joined. Then, we give control to the
 -- 'talk' function.
-
-                   modifyMVar_ state $ \s -> do
-                       let s' = addClient client s
-                       WS.sendTextData conn $
-                           "Welcome! Users: " <>
-                            T.intercalate ", " (map fst s)
-                       broadcast (fst client <> " joined") s'
-                       return s'
-                   talk client state
+                      WS.sendTextData conn msg
+                   --modifyMVar_ state $ \s -> do
+                       --let s' = addClient client s
+                       --WS.sendTextData conn $
+                           --"Welcome! Users: " <>
+                           -- T.intercalate ", " (map fst s)
+                       -- broadcast (fst client <> " joined") s'
+                       -- return s'
+                    -- talk client state
              where
                prefix     = "Hi! I am "
                client     = (T.drop (T.length prefix) msg, conn)
