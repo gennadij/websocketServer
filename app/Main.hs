@@ -67,8 +67,13 @@ removeClient client = filter ((/= fst client) . fst)
 
 broadcast :: Text -> ServerState -> IO ()
 broadcast message clients = do
-  T.putStrLn message
+  T.putStrLn (T.append (T.pack("Der Client sendet: ")) message)
   forM_ clients $ \(_, conn) -> WS.sendTextData conn message
+  
+singlecast :: Text -> WS.Connection -> IO ()
+singlecast message conn = do
+  T.putStrLn (T.append (T.pack("Der Client sendet: ")) message)
+  WS.sendTextData conn message
 
 -- The main function first creates a new state for the server, then spawns the
 -- actual server. For this purpose, we use the simple server provided by
@@ -80,7 +85,7 @@ main :: IO ()
 main = do
   putStrLn "Starte Server"
   state <- newMVar newServerState
-  WS.runServer "127.0.0.1" 9160 $ application state
+  WS.runServer "127.0.0.1" 9000 $ application state
 
 -- Our main application has the type:
 
@@ -105,27 +110,27 @@ application state pending = do
 -- be in the format of "Hi! I am Jasper", where Jasper is the requested username.
 
       msg <- WS.receiveData conn
-      putStrLn "Der Client sendet: "
-      clients <- readMVar state
+      -- clients <- readMVar state
       case msg of
 
 -- Check that the first message has the right format:
 
-          _   | not (prefix `T.isPrefixOf` msg) ->
-                  WS.sendTextData conn ("Wrong announcement" :: Text)
+          _   
+              -- | not (prefix `T.isPrefixOf` msg) ->
+              --     WS.sendTextData conn ("Wrong announcement" :: Text)
 
 -- Check the validity of the username:
 
-              | any ($ fst client)
-                  [T.null, T.any isPunctuation, T.any isSpace] ->
-                      WS.sendTextData conn ("Name cannot " <>
-                          "contain punctuation or whitespace, and " <>
-                          "cannot be empty" :: Text)
+              -- | any ($ fst client)
+              --   [T.null, T.any isPunctuation, T.any isSpace] ->
+              --       WS.sendTextData conn ("Name cannot " <>
+              --           "contain punctuation or whitespace, and " <>
+              --           "cannot be empty" :: Text)
 
 -- Check that the given username is not already taken:
 
-              | clientExists client clients ->
-                  WS.sendTextData conn ("User already exists" :: Text)
+              -- | clientExists client clients ->
+              --     WS.sendTextData conn ("User already exists" :: Text)
 
 -- All is right! We're going to allow the client, but for safety reasons we *first*
 -- setup a `disconnect` function that will be run when the connection is closed.
@@ -136,22 +141,24 @@ application state pending = do
 -- the list and broadcast the fact that he has joined. Then, we give control to the
 -- 'talk' function.
 
-                  modifyMVar_ state $ \s -> do
-                      let s' = addClient client s
-                      WS.sendTextData conn $
-                          "Welcome! Users: " <>
-                          T.intercalate ", " (map fst s)
-                      broadcast (fst client <> " joined") s'
-                      return s'
-                  talk client state
+                  -- modifyMVar_ state $ \s -> do
+                  --    let s' = addClient client s
+                  --    WS.sendTextData conn $
+                  --        "Welcome! Users: " <>
+                  --        T.intercalate ", " (map fst s)
+                  --    broadcast (fst client <> " joined") s'
+                  --    return s'
+                  -- talk client state
+                  talk2 (T.pack("Client"), conn)
             where
-              prefix     = "Hi! I am "
-              client     = (T.drop (T.length prefix) msg, conn)
+              -- prefix     = "=="
+              -- client     = (T.drop (T.length prefix) msg, conn)
               disconnect = do
+                  singlecast msg conn
                   -- Remove client and return new state
-                  s <- modifyMVar state $ \s ->
-                      let s' = removeClient client s in return (s', s')
-                  broadcast (fst client <> " disconnected") s
+                  -- s <- modifyMVar state $ \s ->
+                  --     let s' = removeClient client s in return (s', s')
+                  -- broadcast (fst client <> " disconnected") s
 
 -- The talk function continues to read messages from a single client until he
 -- disconnects. All messages are broadcasted to the other clients.
@@ -161,3 +168,9 @@ talk (user, conn) state = forever $ do
   msg <- WS.receiveData conn
   readMVar state >>= broadcast
       (user `mappend` ": " `mappend` msg)
+      
+talk2 :: Client -> IO ()
+talk2 (user, conn) = forever $ do
+  msg <- WS.receiveData conn
+  singlecast msg conn
+    
