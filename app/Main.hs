@@ -36,8 +36,8 @@ newClients = []
 
 
 -- new addClient
-addClient_ :: WS.Connection -> Clients -> Clients
-addClient_ conn clients = conn : clients
+addClient :: WS.Connection -> Clients -> Clients
+addClient conn clients = conn : clients
 
 main :: IO ()
 main = do
@@ -54,7 +54,7 @@ application clients pending = do
   conn <- WS.acceptRequest pending
   WS.withPingThread conn 30 (return ()) $ do
       modifyMVar_ clients $ \c -> do
-        let cl = addClient_ conn c
+        let cl = addClient conn c
         T.putStrLn "Client Connected."
         return cl
       WS.sendTextData conn ("Client connected" :: Text)
@@ -65,4 +65,4 @@ talk conn clients = forever $ do
   msg <- WS.receiveData conn
   T.putStrLn (T.append (T.pack "Client -> Server : ") msg)
   T.putStrLn (T.append (T.pack "Client <- Server : ") msg)
-  WS.sendTextData conn (msg :: Text)
+  WS.sendTextData conn (T.pack "Response: " `T.append` msg  :: Text)
