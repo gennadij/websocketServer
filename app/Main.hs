@@ -26,56 +26,22 @@ import qualified Data.Text.IO as T
 
 import qualified Network.WebSockets as WS
 
--- We represent a client by their username and a `WS.Connection`. We will see how we
--- obtain this `WS.Connection` later on.
+-- new TestTyp
+type Clients = [WS.Connection]
 
-type Client = (Text, WS.Connection)
-
--- The state kept on the server is simply a list of connected clients. We've added
--- an alias and some utility functions, so it will be easier to extend this state
--- later on.
-
-type ServerState = [Client]
-
--- Create a new, initial state:
-
-newServerState :: ServerState
-newServerState = []
-
+-- newClient
+newClients :: Clients
+newClients = []
 -- Get the number of active clients:
 
-numClients :: ServerState -> Int
-numClients = length
 
--- Check if a user already exists (based on username):
-
-clientExists :: Client -> ServerState -> Bool
-clientExists client = any ((== fst client) . fst)
-
--- Add a client (this does not check if the client already exists, you should do
--- this yourself using `clientExists`):
-
-addClient :: Client -> ServerState -> ServerState
-addClient client clients = client : clients
-
--- Remove a client:
-
-removeClient :: Client -> ServerState -> ServerState
-removeClient client = filter ((/= fst client) . fst)
-
--- Send a message to all clients, and log it on stdout:
-
-broadcast :: Text -> ServerState -> IO ()
-broadcast message clients = do
-    T.putStrLn message
-    forM_ clients $ \(_, conn) -> WS.sendTextData conn message
-
--- The main function first creates a new state for the server, then spawns the
--- actual server. For this purpose, we use the simple server provided by
--- `WS.runServer`.
+-- new addClient
+addClient :: WS.Connection -> Clients -> Clients
+addClient conn clients = conn : clients
 
 main :: IO ()
 main = do
+<<<<<<< HEAD
     state <- newMVar newServerState
     T.putStrLn "Websocket Server run"
     WS.runServer "127.0.0.1" 9160 $ application state
@@ -158,3 +124,30 @@ talk (user, conn) state = forever $ do
     msg <- WS.receiveData conn
     readMVar state >>= broadcast
         (user `mappend` ": " `mappend` msg)
+=======
+--    state <- newMVar newServerState
+    T.putStrLn "Server started."
+    clients <- newMVar newClients
+    WS.runServer "127.0.0.1" 9160 $ application clients
+
+-- Our main application has the type:
+
+application :: MVar Clients -> WS.ServerApp
+
+application clients pending = do
+  conn <- WS.acceptRequest pending
+  WS.withPingThread conn 30 (return ()) $ do
+      modifyMVar_ clients $ \c -> do
+        let cl = addClient conn c
+        T.putStrLn "Client Connected."
+        return cl
+      WS.sendTextData conn ("Client connected" :: Text)
+      talk conn clients
+
+talk :: WS.Connection -> MVar Clients -> IO ()
+talk conn clients = forever $ do
+  msg <- WS.receiveData conn
+  T.putStrLn (T.append (T.pack "Client -> Server : ") msg)
+  T.putStrLn (T.append (T.pack "Client <- Server : ") msg)
+  WS.sendTextData conn (T.pack "Response: " `T.append` msg  :: Text)
+>>>>>>> origin/testProjekt_3
