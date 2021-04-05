@@ -15,7 +15,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
-import Data.Char (isPunctuation, isSpace)
+import Data.Char (isPunctuation, isSpace, isDigit)
 import Data.Monoid (mappend)
 import Data.Text (Text)
 import Control.Exception (finally)
@@ -75,5 +75,9 @@ convertTextToInt st = read (T.unpack st) :: Int
 
 handleMsg :: Text -> WS.Connection -> IO ()
 handleMsg msg conn = case msg of
-  _ | True -> WS.sendTextData conn (T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
+  _ | isNummeric $ T.unpack msg -> WS.sendTextData conn (T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
     | otherwise -> WS.sendTextData conn ("Standardausgabe" :: Text)
+
+isNummeric :: String -> Bool
+isNummeric [] = False
+isNummeric xs = all isDigit xs
