@@ -61,11 +61,19 @@ application clients pending = do
       talk conn clients
 
 talk :: WS.Connection -> MVar Clients -> IO ()
-talk conn clients = forever $ do
+talk conn clients = forever $ do 
   msg <- WS.receiveData conn
-  T.putStrLn (T.append (T.pack "Client -> Server : ") msg)
-  WS.sendTextData conn (
-    T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
+  handleMsg msg conn
+  -- T.putStrLn (T.append (T.pack "Client -> Server : ") msg)
+  -- WS.sendTextData conn (
+    -- T.pack "Response: " `T.append` T.pack (
+      -- calcExactRoot(convertTextToInt (msg :: Text))))
+    
 
 convertTextToInt :: Text -> Int 
 convertTextToInt st = read (T.unpack st) :: Int
+
+handleMsg :: Text -> WS.Connection -> IO ()
+handleMsg msg conn = case msg of
+  _ | True -> WS.sendTextData conn (T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
+    | otherwise -> WS.sendTextData conn ("Standardausgabe" :: Text)
