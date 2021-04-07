@@ -76,7 +76,7 @@ convertTextToInt st = read (T.unpack st) :: Int
 handleMsg :: Text -> WS.Connection -> IO ()
 handleMsg msg conn = case msg of
   _ | isNummeric $ T.unpack msg -> WS.sendTextData conn (T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
-    | otherwise -> WS.sendTextData conn ("Standardausgabe" :: Text)
+    | otherwise -> WS.sendTextData conn ("Undefinierte Eingabe" :: Text)
 
 isNummeric :: String -> Bool
 isNummeric [] = False
