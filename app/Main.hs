@@ -29,13 +29,13 @@ addClient :: WS.Connection -> Clients -> Clients
 addClient conn clients = conn : clients
 
 -- Test Json
-data CalcExactRoot = CalcExactRoot{
-      test :: !Text 
+data ExactRoot = ExactRoot{
+      action :: !Text,
+      device :: !Text
 } deriving (Show, Generic)
 
-instance FromJSON CalcExactRoot
-instance ToJSON CalcExactRoot
-
+instance FromJSON ExactRoot
+instance ToJSON ExactRoot
 
 main :: IO ()
 main = do
@@ -61,9 +61,10 @@ application clients pending = do
 talk :: WS.Connection -> MVar Clients -> IO ()
 talk conn clients = forever $ do  
   msg <- WS.receiveData conn
-  let Just res = decode (WS.toLazyByteString msg) :: Maybe CalcExactRoot
-  print res
-  putStrLn $ "Decode: " ++ (show (decode $ WS.toLazyByteString msg :: Maybe CalcExactRoot))
+  let Just res = decode (WS.toLazyByteString msg) :: Maybe ExactRoot
+  print (action res)
+  print (device res)
+  -- putStrLn $ "Decode: " ++ (show (decode $ WS.toLazyByteString msg :: Maybe CalcExactRoot))
   handleMsg msg conn
   -- T.putStrLn (T.append (T.pack "Client -> Server : ") msg)
   -- WS.sendTextData conn (
@@ -77,7 +78,7 @@ convertTextToInt st = read (T.unpack st) :: Int
 handleMsg :: Text -> WS.Connection -> IO ()
 handleMsg msg conn = case msg of
   _ | isNummeric $ T.unpack msg -> WS.sendTextData conn (T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
-    | otherwise -> WS.sendTextData conn (encode (CalcExactRoot{test = "response"}))
+    | otherwise -> WS.sendTextData conn (encode (ExactRoot{action = "response", device = "test2"}))
 
 isNummeric :: String -> Bool
 isNummeric [] = False

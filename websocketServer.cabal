@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2bbfe9b3b7bef86e607995d716e577550087efcf857c2d8b147a3a90fec80ea7
+-- hash: 5e9d5b9a688ea1c9dd236dcdc346111ce8cdfa0f1a4f0d0d497471db12ea6e02
 
 name:           websocketServer
 version:        0.1.0.0
@@ -28,8 +28,6 @@ source-repository head
 library
   exposed-modules:
       Lib
-      PutJson
-      SimpleJson
   other-modules:
       Paths_websocketServer
   hs-source-dirs:
