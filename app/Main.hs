@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Main where
 import Data.Char (isPunctuation, isSpace, isDigit)
 import Data.Monoid (mappend)
@@ -14,6 +15,7 @@ import qualified Network.WebSockets as WS
 import Lib ( calcExactRoot )
 import Data.Aeson
 import GHC.Generics
+import qualified Data.ByteString.Lazy as LB
 
 -- new TestTyp
 type Clients = [WS.Connection]
@@ -28,14 +30,23 @@ newClients = []
 addClient :: WS.Connection -> Clients -> Clients
 addClient conn clients = conn : clients
 
--- Test Json
-data ExactRoot = ExactRoot{
-      action :: !Text,
-      device :: !Text
-} deriving (Show, Generic)
+data RequestJson = RequestJson{
+  requestAction :: String,
+  requestData :: JsonData
+} deriving (Show, Generic, FromJSON, ToJSON)
 
-instance FromJSON ExactRoot
-instance ToJSON ExactRoot
+data JsonData = JsonData {
+  radicand :: Int,
+  resExactRoot :: String
+} deriving (Show, Generic, FromJSON, ToJSON)
+
+data ResponseJson = ResponseJson {
+  responseAction :: String,
+  responseData :: JsonData
+} deriving (Show, Generic, FromJSON, ToJSON)
+
+-- instance FromJSON ExactRoot
+-- instance ToJSON ExactRoot
 
 main :: IO ()
 main = do
@@ -59,28 +70,42 @@ application clients pending = do
       talk conn clients
 
 talk :: WS.Connection -> MVar Clients -> IO ()
-talk conn clients = forever $ do  
+talk conn clients = forever $ do
   msg <- WS.receiveData conn
-  let Just res = decode (WS.toLazyByteString msg) :: Maybe ExactRoot
-  print (action res)
-  print (device res)
-  -- putStrLn $ "Decode: " ++ (show (decode $ WS.toLazyByteString msg :: Maybe CalcExactRoot))
-  handleMsg msg conn
-  -- T.putStrLn (T.append (T.pack "Client -> Server : ") msg)
-  -- WS.sendTextData conn (
-    -- T.pack "Response: " `T.append` T.pack (
-      -- calcExactRoot(convertTextToInt (msg :: Text))))
-    
+  -- print (decodeJson msg)
+  -- print msg
+  handleMsg (decodeJson msg) conn
 
-convertTextToInt :: Text -> Int 
+convertTextToInt :: Text -> Int
 convertTextToInt st = read (T.unpack st) :: Int
 
-handleMsg :: Text -> WS.Connection -> IO ()
-handleMsg msg conn = case msg of
-  _ | isNummeric $ T.unpack msg -> WS.sendTextData conn (T.pack "Response: " `T.append` T.pack (calcExactRoot(convertTextToInt (msg :: Text))))
-    | otherwise -> WS.sendTextData conn (encode (ExactRoot{action = "response", device = "test2"}))
+handleMsg :: Maybe RequestJson -> WS.Connection -> IO ()
+handleMsg jObject conn = case jObject of
+  Just obj | isExactRoot $ requestAction obj -> WS.sendTextData conn (convertToJsonResponse (radicand (requestData obj)))
+           | otherwise -> WS.sendTextData conn ("Unbekannte Anfrage" :: Text)
+  Nothing -> WS.sendTextData conn ("Unbekante Anfrage" :: Text)
 
 isNummeric :: String -> Bool
 isNummeric [] = False
 isNummeric xs = all isDigit xs
+
+execExactRoot :: Int -> String
+execExactRoot = calcExactRoot
+
+convertToJsonResponse :: Int -> LB.ByteString
+convertToJsonResponse radicand = encode (
+  ResponseJson {
+    responseAction = "exactRoot",
+    responseData = JsonData {
+      radicand = 0,
+      resExactRoot = execExactRoot radicand
+    }
+  })
+
+isExactRoot :: String -> Bool
+isExactRoot action =
+  action == "exactRoot"
+
+decodeJson :: Text -> Maybe RequestJson
+decodeJson msg = decode (WS.toLazyByteString msg) :: Maybe RequestJson
 
