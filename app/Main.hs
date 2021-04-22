@@ -73,7 +73,7 @@ talk :: WS.Connection -> MVar Clients -> IO ()
 talk conn clients = forever $ do
   msg <- WS.receiveData conn
   -- print (decodeJson msg)
-  -- print msg
+  print msg
   handleMsg (decodeJson msg) conn
 
 convertTextToInt :: Text -> Int
