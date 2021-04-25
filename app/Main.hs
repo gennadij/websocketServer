@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
 
-import Lib ( calcExactRoot )
+import Lib ( calcExactRootString, calcExactRoot, getFirst, Root ( .. ))
 import Data.Aeson
 import GHC.Generics
 import qualified Data.ByteString.Lazy as LB
@@ -66,7 +66,7 @@ application clients pending = do
         let cl = addClient conn c
         T.putStrLn "Client Connected."
         return cl
-      WS.sendTextData conn ("Client connected" :: Text)
+      -- WS.sendTextData conn ("Client connected" :: Text)
       talk conn clients
 
 talk :: WS.Connection -> MVar Clients -> IO ()
@@ -89,8 +89,8 @@ isNummeric :: String -> Bool
 isNummeric [] = False
 isNummeric xs = all isDigit xs
 
-execExactRoot :: Int -> String
-execExactRoot = calcExactRoot
+execExactRootString :: Int -> String
+execExactRootString = calcExactRootString
 
 convertToJsonResponse :: Int -> LB.ByteString
 convertToJsonResponse radicand = encode (
@@ -98,7 +98,7 @@ convertToJsonResponse radicand = encode (
     responseAction = "exactRoot",
     responseData = JsonData {
       radicand = 0,
-      resExactRoot = execExactRoot radicand
+      resExactRoot = execExactRootString radicand
     }
   })
 
@@ -108,4 +108,7 @@ isExactRoot action =
 
 decodeJson :: Text -> Maybe RequestJson
 decodeJson msg = decode (WS.toLazyByteString msg) :: Maybe RequestJson
+
+execExactRoot :: Int -> [Root]
+execExactRoot = calcExactRoot
 

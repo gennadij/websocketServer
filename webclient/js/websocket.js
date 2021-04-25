@@ -30,7 +30,7 @@ function createWebsocket(ws) {
       console.log("Server sendet : " + evt.data)
       var received_msg = JSON.parse(evt.data);
       console.log("Received Message: " + evt.data);
-      $("#ergebnis").text("Ergebnis: " +  evt.data)
+      $("#ergebnis").text("Ergebnis: " +  evt.data  )
    }
 
    ws.onclose = function() {
