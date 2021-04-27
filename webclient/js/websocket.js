@@ -13,7 +13,8 @@
       {requestAction :"exactRoot", 
         requestData : { 
           radicand : parseInt(rad),
-          resExactRoot : ""
+          resExactRootMultiplier : "",
+          resExactRootSqrt : ""
         }
       }
     ))

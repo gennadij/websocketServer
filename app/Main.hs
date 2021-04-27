@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
 
-import Lib ( calcExactRootString, calcExactRoot, getFirst, Root ( .. ))
+import Lib ( calcExactRoot_2, Root_2 ( .. ))
 import Data.Aeson
 import GHC.Generics
 import qualified Data.ByteString.Lazy as LB
@@ -37,7 +37,8 @@ data RequestJson = RequestJson{
 
 data JsonData = JsonData {
   radicand :: Int,
-  resExactRoot :: String
+  resExactRootMultiplier :: String,
+  resExactRootSqrt :: String
 } deriving (Show, Generic, FromJSON, ToJSON)
 
 data ResponseJson = ResponseJson {
@@ -89,8 +90,8 @@ isNummeric :: String -> Bool
 isNummeric [] = False
 isNummeric xs = all isDigit xs
 
-execExactRootString :: Int -> String
-execExactRootString = calcExactRootString
+-- execExactRootString :: Int -> String
+-- execExactRootString = calcExactRootString
 
 convertToJsonResponse :: Int -> LB.ByteString
 convertToJsonResponse radicand = encode (
@@ -98,9 +99,15 @@ convertToJsonResponse radicand = encode (
     responseAction = "exactRoot",
     responseData = JsonData {
       radicand = 0,
-      resExactRoot = execExactRootString radicand
+      resExactRootMultiplier = multiplier,
+      resExactRootSqrt = sqrt
     }
   })
+  where 
+    multiplier = getMuliplier exactRoot
+    sqrt = getSqrt exactRoot
+    exactRoot = execExactRoot radicand
+
 
 isExactRoot :: String -> Bool
 isExactRoot action =
@@ -109,6 +116,13 @@ isExactRoot action =
 decodeJson :: Text -> Maybe RequestJson
 decodeJson msg = decode (WS.toLazyByteString msg) :: Maybe RequestJson
 
-execExactRoot :: Int -> [Root]
-execExactRoot = calcExactRoot
+execExactRoot :: Int -> [Root_2]
+execExactRoot = calcExactRoot_2
 
+getMuliplier :: [Root_2] -> String
+getMuliplier [x] = ""
+getMuliplier [x, y] = show (wurzelWert x)
+
+getSqrt :: [Root_2] -> String
+getSqrt [x] = show (wurzelWert x)
+getSqrt [x, y] = show (wurzelWert y) 

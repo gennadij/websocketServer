@@ -1,9 +1,8 @@
 module Lib
 ( 
-  calcExactRootString,
   calcExactRoot_2,
   getFirst,
-  Root( .. )
+  Root_2( .. )
 ) where
 
 {-
@@ -35,19 +34,18 @@ getFirst (Root a b) = a
 getSecond :: Root -> Int
 getSecond (Root a b) = b
 
-calcExactRootString :: Int -> String
-calcExactRootString radicand
+-- calcExactRootString :: Int -> String
+-- calcExactRootString radicand
   -- versuche den wurzel restlos mit jedem standart Wurzel zu teilen
-  | null result = showResult radicand (complexSerchOfExactResult radicand (giveRoots radicand))
-  | otherwise = showResult radicand result
-      where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
+--   | null result = showResult radicand (complexSerchOfExactResult radicand (giveRoots radicand))
+--   | otherwise = showResult radicand result
+--       where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
 
 -- calcExactRoot :: Int -> [Root] 
 -- calcExactRoot radicand
 --   | null result = complexSerchOfExactResult radicand (giveRoots radicand)
 --   | otherwise = result  
 --     where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
-
 
 calcExactRoot_2 :: Int -> [Root_2] 
 calcExactRoot_2 radicand
