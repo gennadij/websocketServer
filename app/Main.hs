@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
 
-import Lib ( calcExactRoot_2, Root_2 ( .. ))
+import Lib ( calcExactRoot_2, Root ( .. ))
 import Data.Aeson
 import GHC.Generics
 import qualified Data.ByteString.Lazy as LB
@@ -116,13 +116,13 @@ isExactRoot action =
 decodeJson :: Text -> Maybe RequestJson
 decodeJson msg = decode (WS.toLazyByteString msg) :: Maybe RequestJson
 
-execExactRoot :: Int -> [Root_2]
+execExactRoot :: Int -> [Root]
 execExactRoot = calcExactRoot_2
 
-getMuliplier :: [Root_2] -> String
+getMuliplier :: [Root] -> String
 getMuliplier [x] = ""
 getMuliplier [x, y] = show (wurzelWert x)
 
-getSqrt :: [Root_2] -> String
+getSqrt :: [Root] -> String
 getSqrt [x] = show (wurzelWert x)
 getSqrt [x, y] = show (wurzelWert y) 
