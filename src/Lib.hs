@@ -1,7 +1,6 @@
 module Lib
 ( 
-  calcExactRoot_2,
-  getFirst,
+  calcExactRoot,
   Root( .. )
 ) where
 
@@ -23,23 +22,17 @@ type Radikand = Int
 
 data Root = Root {
   wurzelWert :: Int,
-  radikand :: Int 
+  radicand :: Int 
 } deriving (Eq, Show)
 
-getFirst :: Root -> Int
-getFirst (Root a b) = a
-
-getSecond :: Root -> Int
-getSecond (Root a b) = b
-
-calcExactRoot_2 :: Int -> [Root] 
-calcExactRoot_2 radicand
-  | null result = complexSerchOfExactResult_2 radicand (giveRoots_2 radicand)
+calcExactRoot :: Int -> [Root] 
+calcExactRoot radicand
+  | null result = complexSerchOfExactResult radicand (giveRoots radicand)
   | otherwise = result  
-    where result = simpleSerchInStandartRoots_2 radicand (giveRoots_2 radicand)
+    where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
 
-giveRoots_2 :: Int -> [Root]
-giveRoots_2 radicand = appendResultOnStandartRoots_2 [2 .. radicand] (calcStandartRoots radicand)
+giveRoots :: Int -> [Root]
+giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRoots radicand)
 
 -- beispiel 50 
 
@@ -60,29 +53,25 @@ calcStandartRoots radicand = calc radicand listOfOddNumbers
             where summe = x + y
 
 -- Root_2
-appendResultOnStandartRoots_2 :: [Int] -> [Int] -> [Root]
-appendResultOnStandartRoots_2 [] _ = []
-appendResultOnStandartRoots_2 _ [] = []
-appendResultOnStandartRoots_2 (x:xs) (y:ys) = Root x y : appendResultOnStandartRoots_2 xs ys
+appendResultOnStandartRoots :: [Int] -> [Int] -> [Root]
+appendResultOnStandartRoots [] _ = []
+appendResultOnStandartRoots _ [] = []
+appendResultOnStandartRoots (x:xs) (y:ys) = Root x y : appendResultOnStandartRoots xs ys
 
 -- Root_2
-simpleSerchInStandartRoots_2 :: Int -> [Root] -> [Root]
-simpleSerchInStandartRoots_2 radicand [] = []
-simpleSerchInStandartRoots_2 radicand xs = filter (\(Root a b) -> radicand == b) xs
+simpleSerchInStandartRoots :: Int -> [Root] -> [Root]
+simpleSerchInStandartRoots radicand [] = []
+simpleSerchInStandartRoots radicand xs = filter (\(Root a b) -> radicand == b) xs
 
 -- quotRem -> (It returns a tuple: (result of integer division, reminder) )
 -- versuche den wurzel restlos mit jedem standart Wurzel zu teilen
 
-complexSerchOfExactResult_2 :: Int -> [Root] -> [Root]
-complexSerchOfExactResult_2 radicand [] = [Root 0 radicand]
-complexSerchOfExactResult_2 radicand (x:xs)
+complexSerchOfExactResult :: Int -> [Root] -> [Root]
+complexSerchOfExactResult radicand [] = [Root 0 radicand]
+complexSerchOfExactResult radicand (x:xs)
                             | snd resFromQout == 0 = [x, uncurry Root resFromQout]
-                            | snd resFromQout > 0  = complexSerchOfExactResult_2 radicand xs
+                            | snd resFromQout > 0  = complexSerchOfExactResult radicand xs
                             | otherwise              = [x]
                             where resFromQout = quotRem radicand (root x)
                                                 where root :: Root -> Int
                                                       root (Root _ b) = b
-
-showResult :: Int -> [Root] -> String
-showResult radicand [x] = "Ergebnis von sqrt(" ++ show radicand ++ ") ist " ++ show (getFirst x) ++ "."
-showResult radicand [x,y] = "Ergebnis von sqrt(" ++ show radicand ++ ") ist " ++ show (getFirst x) ++ "*sqrt(" ++ show (getFirst y) ++ ")."
