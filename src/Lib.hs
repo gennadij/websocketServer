@@ -22,7 +22,7 @@ Beispiel sqrt(50)
 data Ergebnis = Ergebnis {
   einfacheErgebnis :: EinfacheErgebnis,
   komplexeErgebnis :: KomplexeErgebnis
-} 
+ } deriving (Eq, Show)
 
 newtype EinfacheErgebnis = EinfacheErgebnis {
   wurzelWert' :: Int
@@ -34,14 +34,58 @@ data KomplexeErgebnis = KomplexeErgebnis {
 } deriving (Eq, Show)
 
 data StandardWerte = StandardWerte {
-  wurzelWerte :: [Int],
-  multiplikators :: [Int]
+  wurzelWerte :: [Int]
 } deriving (Eq, Show)
 
 data Root = Root {
   wurzelWert :: Int, -- wird nicht verwendet
   radicand :: Int
 } deriving (Eq, Show)
+
+berechneStandardWerte :: Int -> StandardWerte
+berechneStandardWerte radikand =
+  StandardWerte (berechneWurzelWerte ungeradeZahlen)
+  where
+    ungeradeZahlen :: [Int]
+    ungeradeZahlen = filter odd [1 .. radikand]
+    berechneWurzelWerte :: [Int] -> [Int]
+    berechneWurzelWerte [x] = []
+    berechneWurzelWerte (x:y:xs)
+      | summe <= radikand = summe : berechneWurzelWerte (summe : xs)
+      | otherwise         = []
+      where
+        summe = x + y
+
+berechneEinfacheWurzelWert :: Int -> StandardWerte -> EinfacheErgebnis
+berechneEinfacheWurzelWert radicand_ standardWerte
+  | null (wurzelWerte standardWerte) = EinfacheErgebnis 0
+  | null einfacheWurzelWert          = EinfacheErgebnis 0
+  | otherwise                        = EinfacheErgebnis (head einfacheWurzelWert)
+                                      where einfacheWurzelWert = filter (radicand_ ==) (wurzelWerte standardWerte)
+
+berechneKomplexeWurzelWert :: Int -> StandardWerte -> KomplexeErgebnis
+berechneKomplexeWurzelWert radicand_ standardWerte
+  | null wW    = KomplexeErgebnis 0 0
+  | otherwise  = uncurry KomplexeErgebnis (radicand wW)
+                    where 
+                      wW :: [Int]
+                      wW = wurzelWerte standardWerte
+                      radicand :: [Int] -> (Int, Int)
+                      radicand (x:xs)
+                        | snd ergebnisVonQuotRem == 0 = (x, fst ergebnisVonQuotRem)
+                        | snd ergebnisVonQuotRem > 0  = radicand xs
+                        | otherwise                   = (x, 0)
+                        where ergebnisVonQuotRem = quotRem radicand_ x
+
+berechneWurzel :: Int -> Ergebnis
+berechneWurzel radicand__
+  | einfacheWurzelWert == 0 = Ergebnis einfacheErgebnis komplexeWurzelWert 
+  | otherwise = Ergebnis einfacheErgebnis (KomplexeErgebnis 0 0) 
+    where standardWerte = berechneStandardWerte radicand__
+          einfacheErgebnis = berechneEinfacheWurzelWert radicand__ standardWerte
+          komplexeWurzelWert = berechneKomplexeWurzelWert radicand__ standardWerte
+          einfacheWurzelWert   = wurzelWert' einfacheErgebnis
+
 
 -- Hauptfunktion welche die Schnittstelle difeniert
 calcExactRoot :: Int -> [Root]
@@ -67,21 +111,6 @@ giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRo
 --Sonderfall
 -- radicand 2 = sqrt(2)
 
-berechneStandardWerte :: Int -> StandardWerte
-berechneStandardWerte radikand = 
-  StandardWerte [2 .. radikand] (berechneWurzelWerte ungeradeZahlen)
-  where 
-    ungeradeZahlen :: [Int]
-    ungeradeZahlen = filter odd [1 .. radikand]
-    berechneWurzelWerte :: [Int] -> [Int]
-    berechneWurzelWerte [x] = []
-    berechneWurzelWerte (x:y:xs)
-      | summe <= radikand = summe : berechneWurzelWerte xs
-      | otherwise         = []
-      where 
-        summe = x + y
-    
-
 calcStandartRoots :: Int  -> [Int]
 calcStandartRoots radicand = calc listOfOddNumbers
     where listOfOddNumbers :: [Int] -- berchne Ungerade Zahlen
@@ -98,6 +127,8 @@ appendResultOnStandartRoots [] _ = []
 appendResultOnStandartRoots _ [] = []
 appendResultOnStandartRoots (x:xs) (y:ys) = Root x y : appendResultOnStandartRoots xs ys
 
+
+
 simpleSerchInStandartRoots :: Int -> [Root] -> [Root]
 simpleSerchInStandartRoots radicand_ [] = []
 simpleSerchInStandartRoots radicand_ xs = filter (\root -> radicand_ == radicand root) xs
@@ -112,3 +143,4 @@ complexSerchOfExactResult radicand_ (x:xs)
                             | snd resFromQout > 0  = complexSerchOfExactResult radicand_ xs
                             | otherwise            = [x]
                             where resFromQout = quotRem radicand_ (radicand x)
+
