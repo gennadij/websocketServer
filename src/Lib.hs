@@ -1,8 +1,5 @@
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 module Lib
 (
-  calcExactRoot,
-  Root( .. )
 ) where
 
 {-
@@ -18,6 +15,9 @@ Beispiel sqrt(50)
 1. Berschne ungerade Zahlen bis 50
 
 -}
+type Radicand = Int
+type MoeglicheWurzelWert = Int
+type StandardWerte' = [(Int, Int)]
 
 data Ergebnis = Ergebnis {
   einfacheErgebnis :: EinfacheErgebnis,
@@ -37,14 +37,28 @@ data StandardWerte = StandardWerte {
   wurzelWerte :: [Int]
 } deriving (Eq, Show)
 
-data Root = Root {
+{- data Root = Root {
   wurzelWert :: Int, -- wird nicht verwendet
   radicand :: Int
-} deriving (Eq, Show)
+} deriving (Eq, Show) -}
 
 berechneStandardWerte :: Int -> StandardWerte
 berechneStandardWerte radikand =
   StandardWerte (berechneWurzelWerte ungeradeZahlen)
+  where
+    ungeradeZahlen :: [Int]
+    ungeradeZahlen = filter odd [1 .. radikand]
+    berechneWurzelWerte :: [Int] -> [Int]
+    berechneWurzelWerte [x] = []
+    berechneWurzelWerte (x:y:xs)
+      | summe <= radikand = summe : berechneWurzelWerte (summe : xs)
+      | otherwise         = []
+      where
+        summe = x + y
+
+berechneStandardWerte' :: Int -> StandardWerte'
+berechneStandardWerte' radikand =
+  zip [2 .. radikand `quot` 2]  (berechneWurzelWerte ungeradeZahlen)
   where
     ungeradeZahlen :: [Int]
     ungeradeZahlen = filter odd [1 .. radikand]
@@ -88,14 +102,14 @@ berechneWurzel radicand__
 
 
 -- Hauptfunktion welche die Schnittstelle difeniert
-calcExactRoot :: Int -> [Root]
-calcExactRoot radicand
-  | null result = complexSerchOfExactResult radicand (giveRoots radicand)
-  | otherwise = result
-    where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
+-- calcExactRoot :: Int -> [Root]
+-- calcExactRoot radicand
+--   | null result = complexSerchOfExactResult radicand (giveRoots radicand)
+--   | otherwise = result
+--     where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
 
-giveRoots :: Int -> [Root]
-giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRoots radicand)
+-- giveRoots :: Int -> [Root]
+-- giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRoots radicand)
 
 -- beispiel 50 
 
@@ -111,7 +125,7 @@ giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRo
 --Sonderfall
 -- radicand 2 = sqrt(2)
 
-calcStandartRoots :: Int  -> [Int]
+{- calcStandartRoots :: Int  -> [Int]
 calcStandartRoots radicand = calc listOfOddNumbers
     where listOfOddNumbers :: [Int] -- berchne Ungerade Zahlen
           listOfOddNumbers = filter odd [1 .. radicand]
@@ -131,16 +145,16 @@ appendResultOnStandartRoots (x:xs) (y:ys) = Root x y : appendResultOnStandartRoo
 
 simpleSerchInStandartRoots :: Int -> [Root] -> [Root]
 simpleSerchInStandartRoots radicand_ [] = []
-simpleSerchInStandartRoots radicand_ xs = filter (\root -> radicand_ == radicand root) xs
+simpleSerchInStandartRoots radicand_ xs = filter (\root -> radicand_ == radicand root) xs -}
 
 -- quotRem -> (It returns a tuple: (result of integer division, reminder) )
 -- versuche den wurzel restlos mit jedem standart Wurzel zu teilen
 
-complexSerchOfExactResult :: Int -> [Root] -> [Root]
+{- complexSerchOfExactResult :: Int -> [Root] -> [Root]
 complexSerchOfExactResult radicand_ [] = [Root 0 radicand_]
 complexSerchOfExactResult radicand_ (x:xs)
                             | snd resFromQout == 0 = [x, uncurry Root resFromQout]
                             | snd resFromQout > 0  = complexSerchOfExactResult radicand_ xs
                             | otherwise            = [x]
-                            where resFromQout = quotRem radicand_ (radicand x)
+                            where resFromQout = quotRem radicand_ (radicand x) -}
 
