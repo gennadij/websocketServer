@@ -1,5 +1,7 @@
 module Lib
 (
+  calcExactRoot,
+  Root ( .. )
 ) where
 
 {-
@@ -15,10 +17,11 @@ Beispiel sqrt(50)
 1. Berschne ungerade Zahlen bis 50
 
 -}
+{- 
 type Radicand = Int
 type MoeglicheWurzelWert = Int
-type StandardWerte' = [(Int, Int)]
-
+type StandardWerte = [(MoeglicheWurzelWert, Radicand)]
+-}
 data Ergebnis = Ergebnis {
   einfacheErgebnis :: EinfacheErgebnis,
   komplexeErgebnis :: KomplexeErgebnis
@@ -34,15 +37,16 @@ data KomplexeErgebnis = KomplexeErgebnis {
 } deriving (Eq, Show)
 
 data StandardWerte = StandardWerte {
-  wurzelWerte :: [Int]
+  radikands :: [Int],
+  wurzelWerte_radicands :: [(Int, Int)]
 } deriving (Eq, Show)
 
-{- data Root = Root {
+data Root = Root {
   wurzelWert :: Int, -- wird nicht verwendet
   radicand :: Int
-} deriving (Eq, Show) -}
+} deriving (Eq, Show)
 
-berechneStandardWerte :: Int -> StandardWerte
+{- berechneStandardWerte :: Int -> StandardWerte
 berechneStandardWerte radikand =
   StandardWerte (berechneWurzelWerte ungeradeZahlen)
   where
@@ -55,10 +59,12 @@ berechneStandardWerte radikand =
       | otherwise         = []
       where
         summe = x + y
-
-berechneStandardWerte' :: Int -> StandardWerte'
-berechneStandardWerte' radikand =
-  zip [2 .. radikand `quot` 2]  (berechneWurzelWerte ungeradeZahlen)
+-}
+berechneStandardWerte :: Int -> StandardWerte
+berechneStandardWerte radikand =
+  StandardWerte 
+    (berechneWurzelWerte ungeradeZahlen) 
+    (zip [2 .. radikand `quot` 2] (berechneWurzelWerte ungeradeZahlen)) 
   where
     ungeradeZahlen :: [Int]
     ungeradeZahlen = filter odd [1 .. radikand]
@@ -72,18 +78,22 @@ berechneStandardWerte' radikand =
 
 berechneEinfacheWurzelWert :: Int -> StandardWerte -> EinfacheErgebnis
 berechneEinfacheWurzelWert radicand_ standardWerte
-  | null (wurzelWerte standardWerte) = EinfacheErgebnis 0
+  | null (radikands standardWerte) = EinfacheErgebnis 0
   | null einfacheWurzelWert          = EinfacheErgebnis 0
-  | otherwise                        = EinfacheErgebnis (head einfacheWurzelWert)
-                                      where einfacheWurzelWert = filter (radicand_ ==) (wurzelWerte standardWerte)
+  | otherwise                        = EinfacheErgebnis (fst (head einfacheWurzelWert))
+                                      where 
+                                        einfacheWurzelWert = 
+                                          filter 
+                                            (\radikand -> radicand_ == snd radikand) 
+                                            (wurzelWerte_radicands standardWerte)
 
 berechneKomplexeWurzelWert :: Int -> StandardWerte -> KomplexeErgebnis
 berechneKomplexeWurzelWert radicand_ standardWerte
   | null wW    = KomplexeErgebnis 0 0
   | otherwise  = uncurry KomplexeErgebnis (radicand wW)
-                    where 
+                    where
                       wW :: [Int]
-                      wW = wurzelWerte standardWerte
+                      wW = radikands standardWerte
                       radicand :: [Int] -> (Int, Int)
                       radicand (x:xs)
                         | snd ergebnisVonQuotRem == 0 = (x, fst ergebnisVonQuotRem)
@@ -93,8 +103,8 @@ berechneKomplexeWurzelWert radicand_ standardWerte
 
 berechneWurzel :: Int -> Ergebnis
 berechneWurzel radicand__
-  | einfacheWurzelWert == 0 = Ergebnis einfacheErgebnis komplexeWurzelWert 
-  | otherwise = Ergebnis einfacheErgebnis (KomplexeErgebnis 0 0) 
+  | einfacheWurzelWert == 0 = Ergebnis einfacheErgebnis komplexeWurzelWert
+  | otherwise = Ergebnis einfacheErgebnis (KomplexeErgebnis 0 0)
     where standardWerte = berechneStandardWerte radicand__
           einfacheErgebnis = berechneEinfacheWurzelWert radicand__ standardWerte
           komplexeWurzelWert = berechneKomplexeWurzelWert radicand__ standardWerte
@@ -102,14 +112,14 @@ berechneWurzel radicand__
 
 
 -- Hauptfunktion welche die Schnittstelle difeniert
--- calcExactRoot :: Int -> [Root]
--- calcExactRoot radicand
---   | null result = complexSerchOfExactResult radicand (giveRoots radicand)
---   | otherwise = result
---     where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
+calcExactRoot :: Int -> [Root]
+calcExactRoot radicand
+  | null result = complexSerchOfExactResult radicand (giveRoots radicand)
+  | otherwise = result
+    where result = simpleSerchInStandartRoots radicand (giveRoots radicand)
 
--- giveRoots :: Int -> [Root]
--- giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRoots radicand)
+giveRoots :: Int -> [Root]
+giveRoots radicand = appendResultOnStandartRoots [2 .. radicand] (calcStandartRoots radicand)
 
 -- beispiel 50 
 
@@ -125,7 +135,7 @@ berechneWurzel radicand__
 --Sonderfall
 -- radicand 2 = sqrt(2)
 
-{- calcStandartRoots :: Int  -> [Int]
+calcStandartRoots :: Int  -> [Int]
 calcStandartRoots radicand = calc listOfOddNumbers
     where listOfOddNumbers :: [Int] -- berchne Ungerade Zahlen
           listOfOddNumbers = filter odd [1 .. radicand]
@@ -145,16 +155,16 @@ appendResultOnStandartRoots (x:xs) (y:ys) = Root x y : appendResultOnStandartRoo
 
 simpleSerchInStandartRoots :: Int -> [Root] -> [Root]
 simpleSerchInStandartRoots radicand_ [] = []
-simpleSerchInStandartRoots radicand_ xs = filter (\root -> radicand_ == radicand root) xs -}
+simpleSerchInStandartRoots radicand_ xs = filter (\root -> radicand_ == radicand root) xs
 
 -- quotRem -> (It returns a tuple: (result of integer division, reminder) )
 -- versuche den wurzel restlos mit jedem standart Wurzel zu teilen
 
-{- complexSerchOfExactResult :: Int -> [Root] -> [Root]
+complexSerchOfExactResult :: Int -> [Root] -> [Root]
 complexSerchOfExactResult radicand_ [] = [Root 0 radicand_]
 complexSerchOfExactResult radicand_ (x:xs)
                             | snd resFromQout == 0 = [x, uncurry Root resFromQout]
                             | snd resFromQout > 0  = complexSerchOfExactResult radicand_ xs
                             | otherwise            = [x]
-                            where resFromQout = quotRem radicand_ (radicand x) -}
+                            where resFromQout = quotRem radicand_ (radicand x)
 
