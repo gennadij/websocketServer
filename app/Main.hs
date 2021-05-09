@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
 
-import qualified Lib as ER ( calcExactRoot, Root ( .. )) 
+import qualified Lib as ER ( berechneWurzel, Ergebnis ( .. )) 
 import Data.Aeson
 import GHC.Generics
 import qualified Data.ByteString.Lazy as LB
@@ -24,7 +24,6 @@ type Clients = [WS.Connection]
 newClients :: Clients
 newClients = []
 -- Get the number of active clients:
-
 
 -- new addClient
 addClient :: WS.Connection -> Clients -> Clients
@@ -116,13 +115,11 @@ isExactRoot action =
 decodeJson :: Text -> Maybe RequestJson
 decodeJson msg = decode (WS.toLazyByteString msg) :: Maybe RequestJson
 
-execExactRoot :: Int -> [ER.Root]
-execExactRoot = ER.calcExactRoot
+execExactRoot :: Int -> ER.Ergebnis
+execExactRoot = ER.berechneWurzel
 
-getMuliplier :: [ER.Root] -> String
-getMuliplier [x] = ""
-getMuliplier [x, y] = show (ER.wurzelWert x)
+getMuliplier :: ER.Ergebnis -> String
+getMuliplier e = show (ER.multiplikator e)
 
-getSqrt :: [ER.Root] -> String
-getSqrt [x] = show (ER.wurzelWert x)
-getSqrt [x, y] = show (ER.wurzelWert y) 
+getSqrt :: ER.Ergebnis -> String
+getSqrt e = show (ER.wurzelWert e) 
