@@ -28,23 +28,29 @@ Beispiel sqrt(50)
    Dazu wird einfach in der Reihe Wurzelwert_Radikand der zweite Wert 
    (Radikand) verglichen und der erste Wert (Wurzelwert) als Ergebnis
    ausgegeben
-   Funktion : 
+   Funktion : berechneEinfacheWurzelwert
 5. Berechnung des komplexen Wurzelwertes z.B. sqrt(50) = 5 * sqrt(2)
-
+   Bei der komplexen Berechnung wird Iterativ versucht jeden Radikand aus der 
+   Reihe Wurzelwert_Radikand mit Hilfe der quotRem funktion zu teilen.
+   Wenn einen Teiler ohne Rest gefunden wird wird der Ergebnis zu dem
+   unberechnetem Radikand unter Wurzel und der Wurzelwert aus der Reihe 
+   Werzelwert_Radikand zu dem Multiplikator. 
+   5 = Multiplikator
+   sqrt(2) =  unberechneter Radikand
 ------------------------------------------------------------------------------}
 data Ergebnis = Ergebnis {
   wurzelWert :: Int,
   multiplikator :: Int,
-  berechnebar :: Bool 
+  berechnebar :: Bool
  } deriving (Eq, Show)
 
-newtype EinfacheErgebnis = EinfacheErgebnis {
-  wurzelWert_ :: Int
+newtype EinfacheErgebnis = EE {
+  ee_wurzelWert :: Int
 } deriving (Eq, Show)
 
-data KomplexeErgebnis = KomplexeErgebnis {
-  radikand_ :: Int,
-  multiplikator_ :: Int
+data KomplexeErgebnis = KE {
+  ke_radikand :: Int,
+  ke_multiplikator :: Int
 } deriving (Eq, Show)
 
 type Wurzelwert = Int
@@ -57,22 +63,22 @@ data StandardWerte = StandardWerte {
 
 -- Hauptfunktion welche die Schnittstelle difeniert
 berechneWurzel :: Int -> Ergebnis
-berechneWurzel radikand__
-  | multiplikator_ komplexeWurzelwert == 0 && radikand_ komplexeWurzelwert == 0 = 
-    Ergebnis 0 0 False 
-  | einfacheWurzelwert == 0 = 
-    Ergebnis (radikand_ komplexeWurzelwert) (multiplikator_ komplexeWurzelwert) True
+berechneWurzel radikand
+  | multiplikator == 0 && rad == 0 = Ergebnis 0 0 False
+  | einfacheWurzelwert == 0 = Ergebnis rad multiplikator True
   | otherwise = Ergebnis einfacheWurzelwert 0 True
-    where standardWerte = berechneStandardwerte radikand__
-          einfacheErgebnis = berechneEinfacheWurzelwert radikand__ standardWerte
-          komplexeWurzelwert = berechneKomplexeWurzelwert radikand__ standardWerte
-          einfacheWurzelwert = wurzelWert_ einfacheErgebnis
+    where standardWerte = berechneStandardwerte radikand
+          einfacheErgebnis = berechneEinfacheWurzelwert radikand standardWerte
+          komplexeWurzelwert = berechneKomplexeWurzelwert radikand standardWerte
+          einfacheWurzelwert = ee_wurzelWert einfacheErgebnis
+          multiplikator = ke_multiplikator komplexeWurzelwert
+          rad = ke_radikand komplexeWurzelwert
 
 berechneStandardwerte :: Int -> StandardWerte
 berechneStandardwerte radikand =
-  StandardWerte 
-    (berechneWurzelWerte ungeradeZahlen) 
-    (zip [2 .. radikand `quot` 2] (berechneWurzelWerte ungeradeZahlen)) 
+  StandardWerte
+    (berechneWurzelWerte ungeradeZahlen)
+    (zip [2 .. radikand `quot` 2] (berechneWurzelWerte ungeradeZahlen))
   where
     ungeradeZahlen :: [Int]
     ungeradeZahlen = filter odd [1 .. radikand]
@@ -87,20 +93,20 @@ berechneStandardwerte radikand =
 
 berechneEinfacheWurzelwert :: Int -> StandardWerte -> EinfacheErgebnis
 berechneEinfacheWurzelwert radikand_ standardWerte
-  | null (radikands standardWerte) = EinfacheErgebnis 0
-  | null einfacheWurzelWert          = EinfacheErgebnis 0
-  | otherwise                        = EinfacheErgebnis (fst (head einfacheWurzelWert))
-                                      where 
-                                        einfacheWurzelWert = 
-                                          filter 
-                                            (\radikand -> radikand_ == snd radikand) 
+  | null (radikands standardWerte) = EE 0
+  | null einfacheWurzelWert          = EE 0
+  | otherwise                        = EE (fst (head einfacheWurzelWert))
+                                      where
+                                        einfacheWurzelWert =
+                                          filter
+                                            (\radikand -> radikand_ == snd radikand)
                                             (wurzelwerte_radikands standardWerte)
 
 -- quotRem -> (It returns a tuple: (result of integer division, reminder) )
 berechneKomplexeWurzelwert :: Int -> StandardWerte -> KomplexeErgebnis
 berechneKomplexeWurzelwert radikand_ standardWerte
-  | null wW    = KomplexeErgebnis 0 0
-  | otherwise  = KomplexeErgebnis  (snd $ radicand wW) (fst $ radicand wW)
+  | null wW    = KE 0 0
+  | otherwise  = KE (snd $ radicand wW) (fst $ radicand wW)
                     where
                       wW :: [(Int, Int)]
                       wW = wurzelwerte_radikands standardWerte
