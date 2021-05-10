@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
 
-import qualified Lib as ER ( berechneWurzel, Ergebnis ( .. )) 
+import qualified ExactRoot as ER ( berechneWurzel, Ergebnis ( .. )) 
 import Data.Aeson
 import GHC.Generics
 import qualified Data.ByteString.Lazy as LB
